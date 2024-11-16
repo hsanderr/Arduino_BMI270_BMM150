@@ -79,6 +79,57 @@ int BoschSensorClass::begin() {
   return success;
 }
 
+int BoschSensorClass::begin_custom(bmi2_acc_odr_t   acc_odr, 
+                                   bmi2_acc_range_t acc_range,
+                                   bmi2_gyr_odr_t   gyr_odr,
+                                   bmi2_gyr_range_t gyr_range)
+{
+    _wire->begin();
+
+    bmi2.chip_id = BMI2_I2C_PRIM_ADDR;
+    bmi2.read = bmi2_i2c_read;
+    bmi2.write = bmi2_i2c_write;
+    bmi2.delay_us = bmi2_delay_us;
+    bmi2.intf = BMI2_I2C_INTF;
+    bmi2.intf_ptr = &accel_gyro_dev_info;
+    bmi2.read_write_len = 30; // Limitation of the Wire library
+    bmi2.config_file_ptr = NULL; // Use the default BMI270 config file
+    bmi2.acc_odr = acc_odr;
+    bmi2.acc_range = acc_range;
+    bmi2.gyr_odr = gyr_odr;
+    bmi2.gyr_range = gyr_range;
+
+    accel_gyro_dev_info._wire = _wire;
+    accel_gyro_dev_info.dev_addr = bmi2.chip_id;
+
+    bmm1.chip_id = BMM150_DEFAULT_I2C_ADDRESS;
+    bmm1.read = bmi2_i2c_read;
+    bmm1.write = bmi2_i2c_write;
+    bmm1.delay_us = bmi2_delay_us;
+    bmm1.intf = BMM150_I2C_INTF;
+    bmm1.intf_ptr = &mag_dev_info;
+
+    mag_dev_info._wire = _wire;
+    mag_dev_info.dev_addr = bmm1.chip_id;
+
+    int8_t bmi270InitResult = bmi270_init(&bmi2);
+    print_rslt(bmi270InitResult);
+
+    int8_t bmi270ConfigResult = configure_sensor_custom(&bmi2);
+    print_rslt(bmi270ConfigResult);
+
+    int8_t bmm150InitResult = bmm150_init(&bmm1);
+    print_rslt(bmm150InitResult);
+
+    int8_t bmm150ConfigResult = configure_sensor(&bmm1);
+    print_rslt(bmm150ConfigResult);
+
+    bool success = bmi270InitResult == BMI2_OK && bmi270ConfigResult == BMI2_OK && 
+                    bmm150InitResult == BMM150_OK && bmm150ConfigResult == BMM150_OK;
+    _initialized = success;
+
+    return success;
+}
 
 void BoschSensorClass::setContinuousMode() {
   bmi2_set_fifo_config(BMI2_FIFO_GYR_EN | BMI2_FIFO_ACC_EN, 1, &bmi2);
@@ -244,6 +295,51 @@ int8_t BoschSensorClass::configure_sensor(struct bmi2_dev *dev)
     return rslt;
 
   return rslt;
+}
+
+int8_t BoschSensorClass::configure_sensor_custom(struct bmi2_dev *dev)
+{
+    int8_t rslt;
+    uint8_t sens_list[2] = { BMI2_ACCEL, BMI2_GYRO };
+
+    struct bmi2_int_pin_config int_pin_cfg;
+    int_pin_cfg.pin_type = BMI2_INT1;
+    int_pin_cfg.int_latch = BMI2_INT_NON_LATCH;
+    int_pin_cfg.pin_cfg[0].lvl = BMI2_INT_ACTIVE_HIGH;
+    int_pin_cfg.pin_cfg[0].od = BMI2_INT_PUSH_PULL;
+    int_pin_cfg.pin_cfg[0].output_en = BMI2_INT_OUTPUT_ENABLE;
+    int_pin_cfg.pin_cfg[0].input_en = BMI2_INT_INPUT_DISABLE;
+
+    struct bmi2_sens_config sens_cfg[2];
+    sens_cfg[0].type = BMI2_ACCEL;
+    sens_cfg[0].cfg.acc.bwp = BMI2_ACC_OSR2_AVG2;
+    sens_cfg[0].cfg.acc.odr = (uint8_t)dev->acc_odr;
+    sens_cfg[0].cfg.acc.filter_perf = BMI2_PERF_OPT_MODE;
+    sens_cfg[0].cfg.acc.range = (uint8_t)dev->acc_range;
+    sens_cfg[1].type = BMI2_GYRO;
+    sens_cfg[1].cfg.gyr.filter_perf = BMI2_PERF_OPT_MODE;
+    sens_cfg[1].cfg.gyr.bwp = BMI2_GYR_OSR2_MODE;
+    sens_cfg[1].cfg.gyr.odr = (uint8_t)dev->gyr_odr;
+    sens_cfg[1].cfg.gyr.range = (uint8_t)dev->gyr_range;
+    sens_cfg[1].cfg.gyr.ois_range = BMI2_GYR_OIS_2000;
+
+    rslt = bmi2_set_int_pin_config(&int_pin_cfg, dev);
+    if (rslt != BMI2_OK)
+    return rslt;
+
+    rslt = bmi2_map_data_int(BMI2_DRDY_INT, BMI2_INT1, dev);
+    if (rslt != BMI2_OK)
+    return rslt;
+
+    rslt = bmi2_set_sensor_config(sens_cfg, 2, dev);
+    if (rslt != BMI2_OK)
+    return rslt;
+
+    rslt = bmi2_sensor_enable(sens_list, 2, dev);
+    if (rslt != BMI2_OK)
+    return rslt;
+
+    return rslt;
 }
 
 int8_t BoschSensorClass::configure_sensor(struct bmm150_dev *dev)

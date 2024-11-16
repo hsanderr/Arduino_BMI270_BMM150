@@ -2488,6 +2488,51 @@ struct bmi2_map_int
     uint8_t sens_map_int;
 };
 
+typedef enum
+{
+    ACC_RANGE_2G  = BMI2_ACC_RANGE_2G,
+    ACC_RANGE_4G  = BMI2_ACC_RANGE_4G,
+    ACC_RANGE_8G  = BMI2_ACC_RANGE_8G,
+    ACC_RANGE_16G = BMI2_ACC_RANGE_16G
+} bmi2_acc_range_t;
+
+typedef enum
+{
+    ACC_ODR_0_78HZ = BMI2_ACC_ODR_0_78HZ,
+    ACC_ODR_1_56HZ = BMI2_ACC_ODR_1_56HZ,
+    ACC_ODR_3_12HZ = BMI2_ACC_ODR_3_12HZ,
+    ACC_ODR_6_25HZ = BMI2_ACC_ODR_6_25HZ,
+    ACC_ODR_12_5HZ = BMI2_ACC_ODR_12_5HZ,
+    ACC_ODR_25HZ   = BMI2_ACC_ODR_25HZ,
+    ACC_ODR_50HZ   = BMI2_ACC_ODR_50HZ,
+    ACC_ODR_100HZ  = BMI2_ACC_ODR_100HZ,
+    ACC_ODR_200HZ  = BMI2_ACC_ODR_200HZ,
+    ACC_ODR_400HZ  = BMI2_ACC_ODR_400HZ,
+    ACC_ODR_800HZ  = BMI2_ACC_ODR_800HZ,
+    ACC_ODR_1600HZ = BMI2_ACC_ODR_1600HZ,
+} bmi2_acc_odr_t;
+
+typedef enum
+{
+    GYR_RANGE_125  = BMI2_GYR_RANGE_125,
+    GYR_RANGE_250  = BMI2_GYR_RANGE_250,
+    GYR_RANGE_500  = BMI2_GYR_RANGE_500,
+    GYR_RANGE_1000 = BMI2_GYR_RANGE_1000,
+    GYR_RANGE_2000 = BMI2_GYR_RANGE_2000,   
+} bmi2_gyr_range_t;
+
+typedef enum
+{
+    GYR_ODR_25HZ   = BMI2_GYR_ODR_25HZ,
+    GYR_ODR_50HZ   = BMI2_GYR_ODR_50HZ,
+    GYR_ODR_100HZ  = BMI2_GYR_ODR_100HZ,
+    GYR_ODR_200HZ  = BMI2_GYR_ODR_200HZ,
+    GYR_ODR_400HZ  = BMI2_GYR_ODR_400HZ,
+    GYR_ODR_800HZ  = BMI2_GYR_ODR_800HZ,
+    GYR_ODR_1600HZ = BMI2_GYR_ODR_1600HZ,
+    GYR_ODR_3200HZ = BMI2_GYR_ODR_3200HZ,
+} bmi2_gyr_odr_t;
+
 /*!  @name Structure to define BMI2 sensor configurations */
 struct bmi2_dev
 {
@@ -2590,6 +2635,18 @@ struct bmi2_dev
 
     /*! To define maximum number of interrupts */
     uint8_t sens_int_map;
+
+    /*! Accelerometer ODR */
+    bmi2_acc_odr_t acc_odr;
+
+    /*! Accelerometer range */
+    bmi2_acc_range_t acc_range;
+
+    /*! Gyroscope ODR */
+    bmi2_gyr_odr_t gyr_odr;
+
+    /*! Gyroscope range */
+    bmi2_gyr_range_t gyr_range;
 };
 
 /*!  @name Structure to enable an accel axis for foc */

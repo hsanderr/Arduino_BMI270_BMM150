@@ -37,6 +37,8 @@ class BoschSensorClass {
 
     int begin();
     void end();
+    int begin_custom(bmi2_acc_odr_t acc_odr, bmi2_acc_range_t acc_range, 
+                     bmi2_gyr_odr_t gyr_odr, bmi2_gyr_range_t gyr_range);
 
     void debug(Stream&);
     #ifdef __MBED__
@@ -68,6 +70,7 @@ class BoschSensorClass {
     // can be modified by subclassing for finer configuration
     virtual int8_t configure_sensor(struct bmm150_dev *dev);
     virtual int8_t configure_sensor(struct bmi2_dev *dev);
+    virtual int8_t configure_sensor_custom(struct bmi2_dev *dev);
 
   private:
     static int8_t bmi2_i2c_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t len, void *intf_ptr);
